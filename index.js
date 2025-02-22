@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, Timestamp } = require('mongodb');
 const port = process.env.PORT || 3000;
 const app = express()
 
@@ -62,42 +62,21 @@ async function run() {
 
     // Update a task
     app.put("/tasks/:id", async (req, res) => {
-      const id = req.params.id;
-      const updatedTask = req.body;
-      const result = await tasksCollection.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            title: updatedTask.title,
-            description: updatedTask.description,
-            category: updatedTask.category,
-          }
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true }
+      const updatedTask = req.body
+      const task = {
+        $set: {
+          title: updatedTask.title,
+          description: updatedTask.description,
+          category: updatedTask.category,
+          timestamp: updatedTask.timestamp
         }
-      );
+      }
+      const result = await tasksCollection.updateOne(filter, task, options)
       res.send(result);
     });
-
-    // app.put('/all-service/:id', verifyToken, async (req, res) => {
-    //   const id = req.params.id
-    //   const filter = { _id: new ObjectId(id) }
-    //   const options = { upsert: true }
-    //   const updatedService = req.body
-    //   const service = {
-    //     $set: {
-    //       photoUrl: updatedService.photoUrl,
-    //       name: updatedService.name,
-    //       email: updatedService.email,
-    //       providerName: updatedService.providerName,
-    //       providerImage: updatedService.providerImage,
-    //       price: updatedService.price,
-    //       location: updatedService.location,
-    //       currency: updatedService.currency,
-    //       description: updatedService.description
-    //     }
-    //   }
-    //   const result = await serviceCollection.updateOne(filter, service, options)
-    //   res.send(result)
-    // })
 
     // Delete a task
     app.delete("/tasks/:id", async (req, res) => {
@@ -118,9 +97,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Task Management system is running')
-  })
-  
+  res.send('Task Management system is running')
+})
+
 app.listen(port, () => {
-    console.log(`Task Management system is running on port: ${port}`)
-  })
+  console.log(`Task Management system is running on port: ${port}`)
+})
